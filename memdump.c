@@ -64,7 +64,7 @@ int dump_heap(struct heap **heap_dump, int pid_id)
 	sprintf(dump_file,"%d.dump",pid_id);
 	df = fopen(dump_file,"a+");
 	if(df == NULL) {
-		printf("* Error created file %s, quitting.\n", dump_file);
+		printf("* Error creating file %s, quitting.\n", dump_file);
 		ptrace(PTRACE_DETACH, pid_id, NULL, NULL);
 		return -1;
 	}
