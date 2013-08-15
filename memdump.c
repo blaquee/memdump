@@ -1,4 +1,4 @@
-/* 20131408
+/* 20130814
  *  memdump.c
  *  Written by Travis Montoya 
  *  This program was written for analysing the heap of various binaries and exploring
@@ -28,6 +28,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+unsigned int heap_structure_size = 0;
+
 struct heap
 {
 	void *address;
@@ -35,49 +37,59 @@ struct heap
 	int size;
 };
 
+/* ltostr() by jack */
+char *ltostr(char *str, long l) {
+  memset(str, 0, sizeof(long) + 1);
+  memcpy(str, &l, sizeof(long));
+  return str;
+}
+
 long peekdata(void *addr, int pid) 
 {
   return ptrace(PTRACE_PEEKDATA, pid, addr, NULL);
 }
 
-int attach_pid(int pid_id)
-{
-	pid_t proc_traced = 0;
-	ptrace(PTRACE_ATTACH, proc_traced, NULL, NULL);
-	wait(NULL);
-	if(proc_traced != 0) {
-		return proc_traced;
-	} else {
-		return -1;
-	}
-}
 
 int dump_heap(struct heap **heap_dump, int pid_id)
 {
-	char *dump_file;
-	FILE *df;
-	if(attach_pid(pid_id) == 0) {
-		printf("* Error attaching to process [%d].\n",pid_id);
-		return 1;
-	}
+	char dump_file[30];
+	char *dump_data = (char*)malloc(100);
+	FILE *df = NULL;
+	int hs = 0;
+	int bytes = 0;
 
-	strcpy(dump_file,"%d.dump",pid_id);
-	df = fopen(dump_file,"rw");
+	bzero(dump_data,100);
+	ptrace(PTRACE_ATTACH, pid_id, NULL, NULL);
+
+	sprintf(dump_file,"%d.dump",pid_id);
+	df = fopen(dump_file,"a+");
 	if(df == NULL) {
 		printf("* Error created file %s, quitting.\n", dump_file);
 		ptrace(PTRACE_DETACH, pid_id, NULL, NULL);
 		return -1;
 	}
-	
-       	
+
+       	printf("* Dumping memory to %s this can take awhile.\n", dump_file);
+	while(hs < heap_structure_size) {
+		while(heap_dump[hs]->saddress <= heap_dump[hs]->address) {
+			ltostr(dump_data,peekdata(heap_dump[hs]->saddress,pid_id));
+			bytes += fwrite(dump_data,1,sizeof(dump_data),df);
+			heap_dump[hs]->saddress++;
+		}
+;
+		hs++;
+		printf("* Wrote %d bytes.\n", bytes);
+	}
+
 	ptrace(PTRACE_DETACH, pid_id, NULL, NULL);	
 	return 0;
 }
 
+
 struct heap** find_heap_values(int pid_id)
 {
 	struct heap **heaps = (struct heap**)malloc(sizeof(struct heap**));
-	int i,heap_size = 0;	
+	int heap_size = 0;	
 	char *end;
 	char pid_map[30];
 	char *heap_loc, *heap_end;
@@ -102,7 +114,7 @@ struct heap** find_heap_values(int pid_id)
 			}
 
 			heaps[heap_size]->saddress = (void *)strtol(heap_loc,&end,16);
-			printf("[heap] start:0x%s ",heap_loc);
+			printf("* [heap] start:0x%s ",heap_loc);
 			heap_loc = strtok(NULL,"- ");
 			printf("end:0x%s ",heap_loc);
 			heaps[heap_size]->address = (void *)strtol(heap_loc,&end,16);
@@ -114,10 +126,7 @@ struct heap** find_heap_values(int pid_id)
 	}
 
 	fclose(map);
-	for(i=0; i<heap_size; i++) {
-		free(heaps[i]);
-	}
-	free(heaps);
+	heap_structure_size = heap_size;
 	return heaps;
 }
 
@@ -125,9 +134,9 @@ struct heap** find_heap_values(int pid_id)
 int main(int argc, char *argv[])
 {
 	struct heap **heap_dump = NULL;
-	int proc_pid = 0;
+	int i,proc_pid = 0;
 
-        printf("memory dumper version 1.0.1\n");
+        printf("memory dumper version 1.0.1 2013-08-14\n");
         printf("--------------------------------------------------------------\n");
 
 	if(argc != 2) {
@@ -143,5 +152,11 @@ int main(int argc, char *argv[])
 	} else {
 		printf("* Unknown error occured.\n");
 	}
+
+	for(i=0; i<heap_structure_size; i++) {
+                free(heap_dump[i]);
+        }
+        free(heap_dump);
+
 	return 0;
 }	
