@@ -1,3 +1,25 @@
+/* 20131408
+ *  memdump.c
+ *  Written by Travis Montoya 
+ *  This program was written for analysing the heap of various binaries and exploring
+ *  data in memory.
+ *
+ *  (C) Copyright 2013 Travis Montoya
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,12 +54,23 @@ int attach_pid(int pid_id)
 
 int dump_heap(struct heap **heap_dump, int pid_id)
 {
+	char *dump_file;
+	FILE *df;
 	if(attach_pid(pid_id) == 0) {
 		printf("* Error attaching to process [%d].\n",pid_id);
 		return 1;
 	}
 
+	strcpy(dump_file,"%d.dump",pid_id);
+	df = fopen(dump_file,"rw");
+	if(df == NULL) {
+		printf("* Error created file %s, quitting.\n", dump_file);
+		ptrace(PTRACE_DETACH, pid_id, NULL, NULL);
+		return -1;
+	}
 	
+       	
+	ptrace(PTRACE_DETACH, pid_id, NULL, NULL);	
 	return 0;
 }
 
