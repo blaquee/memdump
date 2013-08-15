@@ -76,12 +76,14 @@ int dump_heap(struct heap **heap_dump, int pid_id)
 			bytes += fwrite(dump_data,1,sizeof(dump_data),df);
 			heap_dump[hs]->saddress++;
 		}
-;
+
 		hs++;
 		printf("* Wrote %d bytes.\n", bytes);
 	}
 
-	ptrace(PTRACE_DETACH, pid_id, NULL, NULL);	
+	fclose(df);
+	ptrace(PTRACE_DETACH, pid_id, NULL, NULL);
+	printf("* Finished.\n");	
 	return 0;
 }
 
