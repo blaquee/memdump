@@ -39,14 +39,14 @@ struct heap
 
 /* ltostr() by jack */
 char *ltostr(char *str, long l) {
-  memset(str, 0, sizeof(long) + 1);
-  memcpy(str, &l, sizeof(long));
-  return str;
+  	memset(str, 0, sizeof(long) + 1);
+  	memcpy(str, &l, sizeof(long));
+  	return str;
 }
 
 long peekdata(void *addr, int pid) 
 {
-  return ptrace(PTRACE_PEEKDATA, pid, addr, NULL);
+  	return ptrace(PTRACE_PEEKDATA, pid, addr, NULL);
 }
 
 
