@@ -77,8 +77,9 @@ int dump_heap(struct heap **heap_dump, int pid_id)
 			heap_dump[hs]->saddress++;
 		}
 
-		hs++;
 		printf("* Wrote %d bytes.\n", bytes);
+		bytes = 0;
+		hs++;
 	}
 
 	fclose(df);
@@ -121,7 +122,7 @@ struct heap** find_heap_values(int pid_id)
 			printf("end:0x%s ",heap_loc);
 			heaps[heap_size]->address = (void *)strtol(heap_loc,&end,16);
 			heaps[heap_size]->size = (int)(heaps[heap_size]->address - heaps[heap_size]->saddress);
-			printf("size=%d\n",heaps[heap_size]->size);
+			printf("size=%d\n",heaps[heap_size]->size*8);
 			heap_size++;
 			heaps = realloc(heaps, heap_size*sizeof(struct heap*));
 		}
