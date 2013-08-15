@@ -69,6 +69,7 @@ int dump_heap(struct heap **heap_dump, int pid_id)
 		return -1;
 	}
 
+	printf("--------------------------------------------------------------\n");
        	printf("* Dumping memory to %s this can take awhile.\n", dump_file);
 	while(hs < heap_structure_size) {
 		while(heap_dump[hs]->saddress <= heap_dump[hs]->address) {
