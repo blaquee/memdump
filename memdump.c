@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <time.h>
 
 unsigned int heap_structure_size = 0;
 
@@ -38,7 +39,8 @@ struct heap
 };
 
 /* ltostr() by jack */
-char *ltostr(char *str, long l) {
+char *ltostr(char *str, long l) 
+{
   	memset(str, 0, sizeof(long) + 1);
   	memcpy(str, &l, sizeof(long));
   	return str;
@@ -57,7 +59,7 @@ int dump_heap(struct heap **heap_dump, int pid_id)
 	FILE *df = NULL;
 	int hs = 0;
 	int bytes = 0;
-
+	
 	bzero(dump_data,100);
 	ptrace(PTRACE_ATTACH, pid_id, NULL, NULL);
 
@@ -96,7 +98,7 @@ struct heap** find_heap_values(int pid_id)
 	int heap_size = 0;	
 	char *end;
 	char pid_map[30];
-	char *heap_loc, *heap_end;
+	char *heap_loc;
 	char data[1024];
 	FILE *map;
 	
@@ -130,7 +132,11 @@ struct heap** find_heap_values(int pid_id)
 	}
 
 	fclose(map);
-	heap_structure_size = heap_size;
+	if(heap_size == 0) {
+		return NULL;
+	} else {
+		heap_structure_size = heap_size;
+	}
 	return heaps;
 }
 
